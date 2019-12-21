@@ -1,3 +1,6 @@
+#:import alg pathfinder.Algorithms
+#:import cm pathfinder.ClickMode
+
 <RadioChckBx@CheckBox>:
     size_hint: 0.15, 1
 
@@ -6,42 +9,63 @@
     valign: 'center'
     font_size: '13sp'
 
-<RadioButton@BoxLayout>:
-    size_hint: 1, 0.04
-    text: ''
-    group: ''
-    RadioChckBx:
-        id: cb
-        group: root.group
-    RadioLabel:
-        on_press: cb._do_press()
-        text: root.text
-
 <ControlPanel>:
     spacing: 5
     Spinner:
         size_hint: 1, 0.08
         text: 'Select Algorithm'
-        values: 'Dijkstra\'s', 'A*'
+        values: alg.get_algorithms()
+        on_text: root.change_algorithm(self.text)
     Button:
         size_hint: 1, 0.08
         text: 'Run Search'
+        on_press: root.run_search()
 
     Label:
         text: 'Drawing Mode'
         size_hint: 1, 0.05
-    RadioButton:
-        text: 'Select Source'
-        group: 'mode'
-    RadioButton:
-        text: 'Select Destination'
-        group: 'mode'
-    RadioButton:
-        text: 'Draw Obstacles'
-        group: 'mode'
-    RadioButton:
-        text: 'Erase Obstacles'
-        group: 'mode'
+
+    BoxLayout:
+        size_hint: 1, 0.04
+        RadioChckBx:
+            id: cb1
+            group: 'mode'
+            on_active: root.on_checkbox_active(self.active, cm.SOURCE)
+        RadioLabel:
+            on_press: cb1._do_press()
+            text: 'Select Source'
+
+    BoxLayout:
+        size_hint: 1, 0.04
+        RadioChckBx:
+            id: cb2
+            group: 'mode'
+            on_active: root.on_checkbox_active(self.active, cm.DESTINATION)
+        RadioLabel:
+            on_press: cb2._do_press()
+            text: 'Select Destination'
+
+    BoxLayout:
+        size_hint: 1, 0.04
+        RadioChckBx:
+            id: cb3
+            group: 'mode'
+            on_active: root.on_checkbox_active(self.active, cm.DRAW)
+        RadioLabel:
+            on_press: cb3._do_press()
+            text: 'Draw Obstacles'
+
+    BoxLayout:
+        size_hint: 1, 0.04
+        RadioChckBx:
+            id: cb4
+            group: 'mode'
+            on_active: root.on_checkbox_active(self.active, cm.ERASE)
+        RadioLabel:
+            on_press: cb4._do_press()
+            text: 'Erase Obstacles'
+
     Button:
         size_hint: 1, 0.08
         text: 'Randomize Maze'
+        on_press: root.randomize_maze()
