@@ -1,0 +1,47 @@
+<RadioChckBx@CheckBox>:
+    size_hint: 0.15, 1
+
+<RadioLabel@ButtonBehavior+Label>:
+    text_size: self.size
+    valign: 'center'
+    font_size: '13sp'
+
+<RadioButton@BoxLayout>:
+    size_hint: 1, 0.04
+    text: ''
+    group: ''
+    RadioChckBx:
+        id: cb
+        group: root.group
+    RadioLabel:
+        on_press: cb._do_press()
+        text: root.text
+
+<ControlPanel>:
+    spacing: 5
+    Spinner:
+        size_hint: 1, 0.08
+        text: 'Select Algorithm'
+        values: 'Dijkstra\'s', 'A*'
+    Button:
+        size_hint: 1, 0.08
+        text: 'Run Search'
+
+    Label:
+        text: 'Drawing Mode'
+        size_hint: 1, 0.05
+    RadioButton:
+        text: 'Select Source'
+        group: 'mode'
+    RadioButton:
+        text: 'Select Destination'
+        group: 'mode'
+    RadioButton:
+        text: 'Draw Obstacles'
+        group: 'mode'
+    RadioButton:
+        text: 'Erase Obstacles'
+        group: 'mode'
+    Button:
+        size_hint: 1, 0.08
+        text: 'Randomize Maze'
