@@ -1,3 +1,5 @@
+import random
+from datetime import datetime
 from enum import Enum
 from math import floor
 
@@ -9,11 +11,12 @@ from kivy.uix.stacklayout import StackLayout
 
 
 class TileStates(Enum):
-    UNTOUCHED = 1
-    SOURCE = 2
-    DESTINATION = 3
-    CANDIDATE = 4
-    FINALIZED = 5
+    UNTOUCHED = (0.1, 0.1, 0.1, 1)
+    SOURCE = (0, 1, 0, 1)
+    DESTINATION = (0, 0, 1, 1)
+    CANDIDATE = (1, 1, 1, 1)
+    FINALIZED = (1, 1, 1, 1)
+    OBSTACLE = (0, 0, 0, 1)
 
 
 class Algorithms(Enum):
@@ -55,7 +58,7 @@ class ClickMode(Enum):
 
 
 class Tile(Button):
-    def __init__(self, length: int, x: int, y: int, **kwargs):
+    def __init__(self, tile_map, length: int, x: int, y: int):
         """
         Constructor that gives us the spacial coordinates of the tile
         along with how big it should be
@@ -66,15 +69,34 @@ class Tile(Button):
             **kwargs: Arguments needed by the parent constructor
         """
         # Call parent constructor
-        super().__init__(**kwargs)
+        super().__init__()
         # Initialize members
+        self.tile_map = tile_map
+        self.tile_map.add_widget(self)
         self.size = (length, length)
         self.x = x
         self.y = y
+        self.bind(on_press=self.on_mouse_click)
+        self.tile_state = TileStates.UNTOUCHED
+
+    def on_mouse_click(self, instance):
+        click_mode: ClickMode = self.tile_map.control_panel.click_mode
+        if click_mode.name is ClickMode.SOURCE.name:
+            self.background_color = TileStates.SOURCE.value
+        elif click_mode.name is ClickMode.DESTINATION.name:
+            self.background_color = TileStates.DESTINATION.value
+        elif click_mode.name is ClickMode.ERASE.name:
+            self.background_color = TileStates.UNTOUCHED.value
+        elif click_mode.name is ClickMode.DRAW.name:
+            self.background_color = TileStates.OBSTACLE.value
+
+    def make_obstacle(self):
+        self.background_color = TileStates.OBSTACLE.value
+        self.tile_state = TileStates.OBSTACLE
 
 
 class TileMap(GridLayout):
-    def __init__(self, width: int, height: int, length: int, **kwargs):
+    def __init__(self, control_panel, width: int, height: int, length: int, **kwargs):
         """
         Constructor for the map, which allows us to calculate the number
         of rows and columns and subsequently place tiles accordingly
@@ -87,18 +109,23 @@ class TileMap(GridLayout):
         # Call the parent constructor
         super().__init__(**kwargs)
         # Initialize the members
+        self.control_panel = control_panel
         self.size_hint = (0.75, 1)
         self.rows = floor(height / length)
         self.cols = floor(width / length)
+        self.tiles = [[Tile(self, length, x, y) for x in range(self.cols)] for y in range(self.rows)]
 
-        # Add the tiles to the map while setting their corresponding x-y coordinates
-        for y in range(self.rows):
-            for x in range(self.cols):
-                self.add_widget(Tile(length, x, y))
+    def randomize_obstacles(self, seed=datetime.time()):
+        number_of_obstacles = random.randint(0, self.cols * self.rows)
+        while number_of_obstacles > 0:
+            target: Tile = self.tiles[random.randint(0, self.rows)][random.randint(0, self.cols)]
+            if target.tile_state is not TileStates.OBSTACLE:
+                target.make_obstacle()
+                number_of_obstacles -= 1
 
 
 class ControlPanel(StackLayout):
-    def __init__(self, tile_map: TileMap, **kwargs):
+    def __init__(self, **kwargs):
         """
         Constructor for the control panel, which accepts a reference to a TileMap
         in addition to any kwarg arguments required by the super class's constructor
@@ -109,7 +136,6 @@ class ControlPanel(StackLayout):
         """
         # Call the parent constructor with kwargs
         super().__init__(**kwargs)
-        self.tile_map = tile_map
         self.algo: Algorithms = Algorithms.DIJKSTRA
         self.click_mode: ClickMode = ClickMode.SOURCE
 
@@ -148,8 +174,9 @@ class PathfinderApp(App):
         Returns: A widget, in this case a BoxLayout that defines spacing
         """
         parent = BoxLayout(orientation='horizontal', spacing=5, padding=5)
-        l_tile_map = TileMap(parent.width, parent.height, 5, size_hint=(0.75, 1))
-        parent.add_widget(ControlPanel(l_tile_map, size_hint=(0.25, 1)))
+        l_control_panel = ControlPanel(size_hint=(0.25, 1))
+        l_tile_map = TileMap(l_control_panel, parent.width, parent.height, 5, size_hint=(0.75, 1))
+        parent.add_widget(l_control_panel)
         parent.add_widget(l_tile_map)
         return parent
 
