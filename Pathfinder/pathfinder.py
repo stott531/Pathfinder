@@ -86,7 +86,6 @@ class TileMap(GridLayout):
         """
         # Call the parent constructor
         super().__init__(**kwargs)
-
         # Initialize the members
         self.size_hint = (0.75, 1)
         self.rows = floor(height / length)
